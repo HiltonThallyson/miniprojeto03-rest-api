@@ -1,5 +1,7 @@
 package com.jeanlima.springrestapi.service.impl;
+
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -14,10 +16,12 @@ import com.jeanlima.springrestapi.enums.StatusPedido;
 import com.jeanlima.springrestapi.exception.PedidoNaoEncontradoException;
 import com.jeanlima.springrestapi.exception.RegraNegocioException;
 import com.jeanlima.springrestapi.model.Cliente;
+import com.jeanlima.springrestapi.model.Estoque;
 import com.jeanlima.springrestapi.model.ItemPedido;
 import com.jeanlima.springrestapi.model.Pedido;
 import com.jeanlima.springrestapi.model.Produto;
 import com.jeanlima.springrestapi.repository.ClienteRepository;
+import com.jeanlima.springrestapi.repository.EstoqueRepository;
 import com.jeanlima.springrestapi.repository.ItemPedidoRepository;
 import com.jeanlima.springrestapi.repository.PedidoRepository;
 import com.jeanlima.springrestapi.repository.ProdutoRepository;
@@ -30,11 +34,13 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class PedidoServiceImpl implements PedidoService {
-    
+
     private final PedidoRepository repository;
     private final ClienteRepository clientesRepository;
     private final ProdutoRepository produtosRepository;
     private final ItemPedidoRepository itemsPedidoRepository;
+
+    private final EstoqueRepository estoqueRepository;
 
     @Override
     @Transactional
@@ -45,32 +51,49 @@ public class PedidoServiceImpl implements PedidoService {
                 .orElseThrow(() -> new RegraNegocioException("Código de cliente inválido."));
 
         Pedido pedido = new Pedido();
-        pedido.setTotal();
+
         pedido.setDataPedido(LocalDate.now());
         pedido.setCliente(cliente);
         pedido.setStatus(StatusPedido.REALIZADO);
 
         List<ItemPedido> itemsPedido = converterItems(pedido, dto.getItems());
+        List<ItemPedido> confirmedItemsPedido = new ArrayList<ItemPedido>();
+        for (ItemPedido itemPedido : itemsPedido) {
+            Integer quantityOfProductInEstoque = 0;
+            for (Estoque estoque : estoqueRepository.findAll()) {
+                if (estoque.getProduto().getId() == itemPedido.getProduto().getId()) {
+                    quantityOfProductInEstoque = estoque.getQuantidade();
+                    if (itemPedido.getQuantidade().compareTo(quantityOfProductInEstoque) > 0) {
+                        throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE,
+                                "Quantidade do produto acima do estoque");
+                    }
+                    
+                }
+            }
+            confirmedItemsPedido.add(itemPedido);
+        }
+        pedido.setItens(confirmedItemsPedido);
+        pedido.setTotal();
         repository.save(pedido);
         itemsPedidoRepository.saveAll(itemsPedido);
         pedido.setItens(itemsPedido);
         return pedido;
     }
-    private List<ItemPedido> converterItems(Pedido pedido, List<ItemPedidoDTO> items){
-        if(items.isEmpty()){
+
+    private List<ItemPedido> converterItems(Pedido pedido, List<ItemPedidoDTO> items) {
+        if (items.isEmpty()) {
             throw new RegraNegocioException("Não é possível realizar um pedido sem items.");
         }
 
         return items
                 .stream()
-                .map( dto -> {
+                .map(dto -> {
                     Integer idProduto = dto.getProduto();
                     Produto produto = produtosRepository
                             .findById(idProduto)
                             .orElseThrow(
                                     () -> new RegraNegocioException(
-                                            "Código de produto inválido: "+ idProduto
-                                    ));
+                                            "Código de produto inválido: " + idProduto));
 
                     ItemPedido itemPedido = new ItemPedido();
                     itemPedido.setQuantidade(dto.getQuantidade());
@@ -80,21 +103,24 @@ public class PedidoServiceImpl implements PedidoService {
                 }).collect(Collectors.toList());
 
     }
+
     @Override
     public Optional<Pedido> obterPedidoCompleto(Integer id) {
-        
+
         return repository.findByIdFetchItens(id);
     }
+
     @Override
     public void atualizaStatus(Integer id, StatusPedido statusPedido) {
         repository
                 .findById(id)
-                .map( pedido -> {
+                .map(pedido -> {
                     pedido.setStatus(statusPedido);
                     return repository.save(pedido);
-                }).orElseThrow(() -> new PedidoNaoEncontradoException() );
-        
+                }).orElseThrow(() -> new PedidoNaoEncontradoException());
+
     }
+
     @Override
     public void deletarPedidoById(Integer id) {
         repository.findById(id).map(p -> {
@@ -103,5 +129,4 @@ public class PedidoServiceImpl implements PedidoService {
         }).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 
-    
 }
