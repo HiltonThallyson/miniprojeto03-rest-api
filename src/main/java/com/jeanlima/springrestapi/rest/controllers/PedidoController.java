@@ -23,9 +23,11 @@ import org.springframework.web.server.ResponseStatusException;
 import com.jeanlima.springrestapi.enums.StatusPedido;
 import com.jeanlima.springrestapi.model.ItemPedido;
 import com.jeanlima.springrestapi.model.Pedido;
+import com.jeanlima.springrestapi.repository.EstoqueRepository;
 import com.jeanlima.springrestapi.rest.dto.AtualizacaoStatusPedidoDTO;
 import com.jeanlima.springrestapi.rest.dto.InformacaoItemPedidoDTO;
 import com.jeanlima.springrestapi.rest.dto.InformacoesPedidoDTO;
+import com.jeanlima.springrestapi.rest.dto.ItemPedidoDTO;
 import com.jeanlima.springrestapi.rest.dto.PedidoDTO;
 import com.jeanlima.springrestapi.service.PedidoService;
 
@@ -35,6 +37,8 @@ public class PedidoController {
 
     @Autowired
     private PedidoService service;
+
+    
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
