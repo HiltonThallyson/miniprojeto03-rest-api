@@ -62,8 +62,14 @@ public class Pedido {
     public BigDecimal getTotal() {
         return total;
     }
-    public void setTotal(BigDecimal total) {
-        this.total = total;
+    public void setTotal() {
+        double total = 0.0;
+        for (ItemPedido itemPedido : itens) {
+            Integer quantity = itemPedido.getQuantidade();
+            BigDecimal price = itemPedido.getProduto().getPreco();
+            total += quantity * price.doubleValue();
+        }
+        this.total = new BigDecimal(total);
     }
     public LocalDate getDataPedido() {
         return dataPedido;
