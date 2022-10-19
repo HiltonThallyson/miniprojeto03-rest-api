@@ -25,6 +25,7 @@ import com.jeanlima.springrestapi.repository.EstoqueRepository;
 import com.jeanlima.springrestapi.repository.ItemPedidoRepository;
 import com.jeanlima.springrestapi.repository.PedidoRepository;
 import com.jeanlima.springrestapi.repository.ProdutoRepository;
+import com.jeanlima.springrestapi.rest.controllers.EstoqueController;
 import com.jeanlima.springrestapi.rest.dto.ItemPedidoDTO;
 import com.jeanlima.springrestapi.rest.dto.PedidoDTO;
 import com.jeanlima.springrestapi.service.PedidoService;
@@ -39,8 +40,9 @@ public class PedidoServiceImpl implements PedidoService {
     private final ClienteRepository clientesRepository;
     private final ProdutoRepository produtosRepository;
     private final ItemPedidoRepository itemsPedidoRepository;
-
     private final EstoqueRepository estoqueRepository;
+
+    private final EstoqueController estoqueController;
 
     @Override
     @Transactional
@@ -67,7 +69,8 @@ public class PedidoServiceImpl implements PedidoService {
                         throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE,
                                 "Quantidade do produto acima do estoque");
                     }
-                    
+                    estoque.setQuantidade(quantityOfProductInEstoque - itemPedido.getQuantidade());
+                    estoqueController.updateEstoqueByPatch(estoque.getId(), estoque);
                 }
             }
             confirmedItemsPedido.add(itemPedido);
