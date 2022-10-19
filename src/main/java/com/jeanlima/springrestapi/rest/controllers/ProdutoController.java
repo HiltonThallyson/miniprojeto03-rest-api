@@ -12,6 +12,7 @@ import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -46,6 +47,22 @@ public class ProdutoController {
                 .findById(id)
                 .map( p -> {
                    produto.setId(p.getId());
+                   repository.save(produto);
+                   return produto;
+                }).orElseThrow( () ->
+                new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Produto não encontrado."));
+    }
+
+    @PatchMapping("{id}")
+    @ResponseStatus(NO_CONTENT)
+    public void updateByPatch( @PathVariable Integer id, @RequestBody Produto produto ){
+        repository
+                .findById(id)
+                .map( p -> {
+                   produto.setId(p.getId());
+                   if(produto.getDescricao() == null) produto.setDescricao(p.getDescricao());
+                   if(produto.getPreco() == null) produto.setPreco(p.getPreco());
                    repository.save(produto);
                    return produto;
                 }).orElseThrow( () ->

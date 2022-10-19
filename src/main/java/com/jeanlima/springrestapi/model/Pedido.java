@@ -39,7 +39,7 @@ public class Pedido {
     private BigDecimal total;
 
 
-    @OneToMany(mappedBy = "pedido")
+    @OneToMany(mappedBy = "pedido", orphanRemoval = true)
     private List<ItemPedido> itens;
 
     @Enumerated(EnumType.STRING)

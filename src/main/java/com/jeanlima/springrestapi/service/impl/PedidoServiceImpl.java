@@ -6,7 +6,9 @@ import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.jeanlima.springrestapi.enums.StatusPedido;
 import com.jeanlima.springrestapi.exception.PedidoNaoEncontradoException;
@@ -93,4 +95,13 @@ public class PedidoServiceImpl implements PedidoService {
                 }).orElseThrow(() -> new PedidoNaoEncontradoException() );
         
     }
+    @Override
+    public void deletarPedidoById(Integer id) {
+        repository.findById(id).map(p -> {
+            repository.deleteById(id);
+            return p;
+        }).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    }
+
+    
 }
