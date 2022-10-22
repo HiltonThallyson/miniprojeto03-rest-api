@@ -22,8 +22,12 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.jeanlima.springrestapi.model.Estoque;
 import com.jeanlima.springrestapi.model.Produto;
+import com.jeanlima.springrestapi.repository.EstoqueRepository;
 import com.jeanlima.springrestapi.repository.ProdutoRepository;
+import com.jeanlima.springrestapi.rest.dto.EstoqueDTO;
+import com.jeanlima.springrestapi.rest.dto.ProdutoDTO;
 
 
 
@@ -34,10 +38,27 @@ public class ProdutoController {
     @Autowired
     private ProdutoRepository repository;
 
+    @Autowired
+    private EstoqueController estoqueController;
+    
+    @Autowired
+    private EstoqueRepository estoqueRepository;
+
     @PostMapping
     @ResponseStatus(CREATED)
     public Produto save( @RequestBody Produto produto ){
-        return repository.save(produto);
+        Produto product = repository.save(produto);
+        Integer estoqueId = product.getEstoque().getId();
+        Estoque estoque = product.getEstoque();
+        estoque.setProduto(product);
+        estoqueController.updateEstoqueByPatch(estoqueId, estoque);
+        return product;
+    }
+
+    private Estoque converterEstoqueDTOtoEstoque(EstoqueDTO estoqueDTO) {
+        Estoque estoque = new Estoque();
+        estoque.setQuantidade(estoqueDTO.getQuantidade());
+        return estoque;
     }
 
     @PutMapping("{id}")
@@ -101,6 +122,10 @@ public class ProdutoController {
                         ExampleMatcher.StringMatcher.CONTAINING );
 
         Example example = Example.of(filtro, matcher);
-        return repository.findAll(example);
+        List<Produto> produtos = repository.findAll(example);
+        for (Produto produto : produtos) {
+            produto.getEstoque();
+        }
+        return produtos;
     }
 }

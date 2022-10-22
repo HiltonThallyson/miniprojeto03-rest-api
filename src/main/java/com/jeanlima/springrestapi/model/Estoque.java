@@ -11,6 +11,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 @Entity
 @Table(name = "estoque")
 public class Estoque {  
@@ -21,9 +23,23 @@ public class Estoque {
     @Column(name = "quantidade")
     private Integer quantidade;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @JoinColumn(name = "product_id")
+    @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinColumn(name = "produto_id")
     private Produto produto;
+    
+
+    public Estoque(Integer quantidade, Produto produto) {
+        this.quantidade = quantidade;
+        this.produto = produto;
+    }
+
+
+
+    public Estoque() {
+    }
+
+
+
 
     public Integer getId() {
         return id;
