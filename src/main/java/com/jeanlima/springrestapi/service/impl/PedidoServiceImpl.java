@@ -132,4 +132,36 @@ public class PedidoServiceImpl implements PedidoService {
         }).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 
+    @Override
+    public void atualizarPedido(Integer id, Pedido pedido) {
+        repository.findById(id).map(pedidoExistente -> {
+            pedido.setId(pedidoExistente.getId());
+            if(pedido.getCliente() == null) {
+                pedido.setCliente(pedidoExistente.getCliente());
+            }else {
+                Cliente novoCliente = clientesRepository.findById(pedido.getCliente().getId()).map(cliente -> {
+                    return cliente;
+                }).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente não encontrado"));
+                Cliente clienteExistente = clientesRepository.findById(pedidoExistente.getCliente().getId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                clienteExistente.getPedidos().remove(pedido);
+                clientesRepository.save(clienteExistente);
+                pedido.setCliente(novoCliente);
+            }
+            if(pedido.getItens() == null) pedido.setItens(pedidoExistente.getItens());
+            if(pedido.getDataPedido() == null) pedido.setDataPedido(pedidoExistente.getDataPedido());
+            if(pedido.getStatus() == null) {
+                pedido.setStatus(pedidoExistente.getStatus());
+            }else {
+                atualizaStatus(id, pedido.getStatus());
+            }
+            if(pedido.getTotal() == null) pedido.setTotal();
+            repository.save(pedido);
+            return pedidoExistente;
+            
+        }).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Pedido não encontrado"));
+        
+    }
+
+    
+
 }

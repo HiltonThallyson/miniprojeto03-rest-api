@@ -84,17 +84,23 @@ public class PedidoController {
         ).collect(Collectors.toList());
     }
 
-    @PatchMapping("{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void updateStatus(@PathVariable Integer id ,
-                             @RequestBody AtualizacaoStatusPedidoDTO dto){
-        String novoStatus = dto.getNovoStatus();
-        service.atualizaStatus(id, StatusPedido.valueOf(novoStatus));
-    }
+    // @PatchMapping("{id}")
+    // @ResponseStatus(HttpStatus.NO_CONTENT)
+    // public void updateStatus(@PathVariable Integer id ,
+    //                          @RequestBody AtualizacaoStatusPedidoDTO dto){
+    //     String novoStatus = dto.getNovoStatus();
+    //     service.atualizaStatus(id, StatusPedido.valueOf(novoStatus));
+    // }
 
     @DeleteMapping("{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deletePedidoById(@PathVariable Integer id) {
         service.deletarPedidoById(id);
+    }
+
+    @PatchMapping("{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void updatePedido(@PathVariable Integer id, @RequestBody Pedido pedido) {
+        service.atualizarPedido(id, pedido);
     }
 }
